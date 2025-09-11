@@ -3,7 +3,7 @@ import ShowcaseCard from "./components/cards/ShowcaseCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { items } from "./assets/data";
+import { items } from "../public/assets/data";
 
 const tagline = "Latest Updates";
 const heading = "Choose a block to edit";

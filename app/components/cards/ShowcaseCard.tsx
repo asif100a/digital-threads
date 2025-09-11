@@ -42,7 +42,7 @@ const ShowcaseCard = ({ items }: ShowcaseCardProps) => {
           </div>
           <CardHeader>
             <h3 className="text-lg font-semibold hover:underline md:text-xl">
-              <a href={`/design?${item.id}`} target="_blank">
+              <a href={`/design?item=${item.id}`} target="_blank">
                 {item.title}
               </a>
             </h3>
@@ -52,7 +52,7 @@ const ShowcaseCard = ({ items }: ShowcaseCardProps) => {
           </CardContent>
           <CardFooter>
             <a
-              href={`/design?${item.id}`}
+              href={`/design?item=${item.id}`}
               target="_blank"
               className="flex items-center text-foreground hover:underline"
             >

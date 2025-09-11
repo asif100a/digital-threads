@@ -1,8 +1,3 @@
-import fill_t_shirt from './fill.svg';
-import out_line_thin_t_shirt from './out-line-thin-border.svg';
-import out_line_medium_t_shirt from './out-line-medium-border.svg';
-import out_line_thick_t_shirt from './out-line-thick-border.svg';
-
 export const items = [
   {
     id: "item-1",
@@ -13,7 +8,7 @@ export const items = [
     author: "Sarah Chen",
     published: "1 Jan 2024",
     url: "https://shadcnblocks.com",
-    image: fill_t_shirt,
+    image: '/assets/fill.svg',
   },
   {
     id: "item-2",
@@ -24,7 +19,7 @@ export const items = [
     author: "Marcus Rodriguez",
     published: "1 Jan 2024",
     url: "https://shadcnblocks.com",
-    image: out_line_thin_t_shirt,
+    image: '/assets/out-line-thin-border.svg',
   },
   {
     id: "item-3",
@@ -35,7 +30,7 @@ export const items = [
     author: "Emma Thompson",
     published: "1 Jan 2024",
     url: "https://shadcnblocks.com",
-    image: out_line_medium_t_shirt,
+    image: '/assets/out-line-medium-border.svg',
   },
   {
     id: "item-3",
@@ -46,6 +41,6 @@ export const items = [
     author: "Emma Thompson",
     published: "1 Jan 2024",
     url: "https://shadcnblocks.com",
-    image: out_line_thick_t_shirt,
+    image: '/assets/out-line-thick-border.svg',
   },
 ];

@@ -1,21 +1,79 @@
 "use client";
 
-import React, { useEffect } from "react";
-import * as fabric from "fabric";
+import { Canvas, Circle, Rect } from "fabric";
+import React, { useEffect, useRef, useState } from "react";
+import { RiRectangleLine } from "react-icons/ri";
+import { Button } from "@/components/ui/button";
+import { FaRegCircle } from "react-icons/fa";
+import Settings from "@/app/components/Settings";
 
 export default function Design() {
+  const canvasRef = useRef(null);
+  const [canvas, setCanvas] = useState(null);
+
   useEffect(() => {
-    const canvas = new fabric.Canvas("design-canvas", {
-      width: 500,
-      height: 550,
-    });
+    if (canvasRef.current) {
+      const initCanvas = new Canvas(canvasRef.current, {
+        width: 500,
+        height: 600,
+      });
+
+      initCanvas.backgroundColor = "#fff";
+      initCanvas.renderAll();
+
+      setCanvas(initCanvas);
+
+      return () => {
+        initCanvas.dispose();
+      };
+    }
   }, []);
 
+  const addRectangle = () => {
+    if (canvas) {
+      const rect = new Rect({
+        top: 100,
+        left: 50,
+        width: 100,
+        height: 60,
+        fill: "#F08080",
+      });
+
+      canvas.add(rect);
+    }
+  };
+
+  const addCircle = () => {
+    if (canvas) {
+      const circle = new Circle({
+        top: 150,
+        left: 150,
+        radius: 50,
+        fill: "#EE82EE",
+      });
+
+      canvas.add(circle);
+    }
+  };
+
   return (
-    <section className="py-24">
-      <div className="p-6 flex flex-col items-center">
-        <canvas id="design-canvas" className="border" />
+    <div className="py-16 flex justify-center items-center gap-12">
+      <div className="flex flex-col gap-3">
+        <Button onClick={addRectangle}>
+          <RiRectangleLine />
+        </Button>
+
+        <Button onClick={addCircle}>
+          <FaRegCircle />
+        </Button>
       </div>
-    </section>
+
+      <canvas
+        id="canvas"
+        ref={canvasRef}
+        className="border-2 border-dotted"
+      ></canvas>
+      <Settings canvas={canvas} />
+    </div>
   );
 }
