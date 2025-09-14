@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas, Circle, Rect } from "fabric";
+import type { Canvas as FabricCanvas } from "fabric";
 import React, { useEffect, useRef, useState } from "react";
 import { RiRectangleLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,8 @@ import Settings from "@/app/components/Settings";
 import Video from "@/app/components/Video";
 
 export default function Design() {
-  const canvasRef = useRef(null);
-  const [canvas, setCanvas] = useState(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [canvas, setCanvas] = useState<typeof FabricCanvas | null>(null);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -39,7 +40,6 @@ export default function Design() {
         height: 60,
         fill: "#F08080",
       });
-
       canvas.add(rect);
     }
   };
@@ -52,7 +52,6 @@ export default function Design() {
         radius: 50,
         fill: "#EE82EE",
       });
-
       canvas.add(circle);
     }
   };
