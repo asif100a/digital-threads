@@ -6,6 +6,7 @@ import { RiRectangleLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 import { FaRegCircle } from "react-icons/fa";
 import Settings from "@/app/components/Settings";
+import Video from "@/app/components/Video";
 
 export default function Design() {
   const canvasRef = useRef(null);
@@ -58,7 +59,7 @@ export default function Design() {
 
   return (
     <div className="py-16 flex justify-center items-center gap-12">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 relative">
         <Button onClick={addRectangle}>
           <RiRectangleLine />
         </Button>
@@ -66,6 +67,8 @@ export default function Design() {
         <Button onClick={addCircle}>
           <FaRegCircle />
         </Button>
+
+        <Video canvas={canvas} canvasRef={canvasRef} />
       </div>
 
       <canvas
@@ -73,7 +76,9 @@ export default function Design() {
         ref={canvasRef}
         className="border-2 border-dotted"
       ></canvas>
-      <Settings canvas={canvas} />
+      <div className="absolute top-2/5 right-[356px]">
+        <Settings canvas={canvas} />
+      </div>
     </div>
   );
 }
