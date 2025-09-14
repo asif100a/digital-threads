@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FabricImage } from "fabric";
 import { UploadIcon } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { FaRecordVinyl, FaStopCircle } from "react-icons/fa";
 
 export default function Video({ canvas, canvasRef }) {
   const [videoSrc, setVideoSrc] = useState(null);
@@ -18,6 +19,13 @@ export default function Video({ canvas, canvasRef }) {
   const mediaRecorderRef = useRef(null);
   const recordingIntervalRef = useRef(null);
 
+  // Format recording time as MM:SS
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const handleVideoUpload = (event) => {
     const file = event.target.files[0];
 
@@ -27,10 +35,13 @@ export default function Video({ canvas, canvasRef }) {
       setUploadMessage("");
 
       const url = URL.createObjectURL(file);
+      setVideoSrc(url);
 
       const videoElement = document.createElement("video");
       videoElement.src = url;
       videoElement.crossOrigin = "anonymous";
+      videoElement.muted = true;
+      videoElement.load();
 
       videoElement.addEventListener("loadeddata", () => {
         const videoWidth = videoElement.videoWidth;
@@ -41,12 +52,7 @@ export default function Video({ canvas, canvasRef }) {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
 
-        const scale = Math.min(
-          canvasWidth / videoWidth,
-          canvasHeight / videoHeight
-        );
-
-        canvas.renderAll();
+        const scale = Math.min(canvasWidth / videoWidth, canvasHeight / videoHeight);
 
         const fabricImage = new FabricImage(videoElement, {
           left: 0,
@@ -67,9 +73,7 @@ export default function Video({ canvas, canvasRef }) {
 
       videoElement.addEventListener("progress", () => {
         if (videoElement.buffered.length > 0) {
-          const bufferedEnd = videoElement.buffered.end(
-            videoElement.buffered.length - 1
-          );
+          const bufferedEnd = videoElement.buffered.end(videoElement.buffered.length - 1);
           const duration = videoElement.duration;
           if (duration > 0) {
             setLoadPercentage((bufferedEnd / duration) * 100);
@@ -79,6 +83,7 @@ export default function Video({ canvas, canvasRef }) {
 
       videoElement.addEventListener("error", (error) => {
         console.error("Video load failed: ", error);
+        setUploadMessage("Failed to load video");
       });
 
       videoRef.current = videoElement;
@@ -86,13 +91,19 @@ export default function Video({ canvas, canvasRef }) {
   };
 
   const handlePlayPauseVideo = () => {
-    if (videoRef.current) {
+    if (videoRef.current && fabricVideo) {
       if (videoRef.current.paused) {
-        videoRef.current.play();
-        videoRef.current.addEventListener("timeupdate", () => {
+        videoRef.current.play().catch((error) => {
+          console.error("Video playback failed: ", error);
+        });
+        const updateCanvas = () => {
           fabricVideo.setElement(videoRef.current);
           canvas.renderAll();
-        });
+          if (!videoRef.current.paused) {
+            requestAnimationFrame(updateCanvas);
+          }
+        };
+        requestAnimationFrame(updateCanvas);
         setIsPlaying(true);
       } else {
         videoRef.current.pause();
@@ -114,27 +125,80 @@ export default function Video({ canvas, canvasRef }) {
     fileInputRef.current.click();
   };
 
-  // Recording Video
   const handleStartRecording = () => {
-    const stream = canvasRef.current.captureStream();
+    if (!canvasRef.current.captureStream) {
+      console.error("Canvas captureStream is not supported in this browser");
+      setUploadMessage("Recording is not supported in this browser");
+      return;
+    }
+    const stream = canvasRef.current.captureStream(25);
+    mediaRecorderRef.current = new MediaRecorder(stream);
     mediaRecorderRef.current.ondataavailable = handleDataAvailable;
     mediaRecorderRef.current.start();
     setIsRecording(true);
 
     canvas.getObjects().forEach((obj) => {
-        obj.hasControl = false;
-        obj.selectable = true;
+      obj.hasControls = false;
+      obj.selectable = true;
     });
     canvas.renderAll();
 
     setRecordingTime(0);
     recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev: number) => prev + 1);
+      setRecordingTime((prev) => prev + 1);
     }, 1000);
   };
 
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+
+      canvas.getObjects().forEach((obj) => {
+        obj.hasControls = false;
+      });
+      canvas.renderAll();
+
+      clearInterval(recordingIntervalRef.current);
+    }
+  };
+
+  const handleDataAvailable = (event) => {
+    if (event.data.size > 0) {
+      setRecordingChunks((prev) => [...prev, event.data]);
+    }
+  };
+
+  const handleExportVideo = () => {
+    const blob = new Blob(recordingChunks, { type: "video/webm" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = "canvas-video.webm";
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+
+    setRecordingChunks([]);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (videoSrc) {
+        URL.revokeObjectURL(videoSrc);
+      }
+    };
+  }, [videoSrc]);
+
   return (
-    <div>
+    <div className="relative">
+      {isRecording && (
+        <div className="absolute top-0 left-0 w-full text-center bg-gray-800 text-white py-2">
+          <p className="text-lg font-semibold">Recording: {formatTime(recordingTime)}</p>
+        </div>
+      )}
       <Input
         type="file"
         accept="video/mp4"
@@ -143,11 +207,23 @@ export default function Video({ canvas, canvasRef }) {
         className="hidden"
       />
 
-      <UploadIcon onClick={handleUploadButtonClick} />
-      {console.log("videoSrc: ", videoSrc)}
+      <UploadIcon onClick={handleUploadButtonClick} className="mx-auto" />
+
+      <div className="flex flex-col gap-y-4">
+        <Button
+          onClick={isRecording ? handleStopRecording : handleStartRecording}
+          className="mt-12 w-fit mx-auto"
+        >
+          {isRecording ? <FaStopCircle /> : <FaRecordVinyl />}
+        </Button>
+
+        <Button onClick={handleExportVideo} disabled={!recordingChunks.length}>
+          Export Video
+        </Button>
+      </div>
 
       {videoSrc && (
-        <div className="absolute bottom-0 left-1/2">
+        <div className="mt-12">
           <div className="w-fit border p-1 flex items-center gap-4">
             <Button onClick={handlePlayPauseVideo}>
               {isPlaying ? "Pause" : "Play"}
@@ -155,6 +231,13 @@ export default function Video({ canvas, canvasRef }) {
 
             <Button onClick={handleStopVideo}>Stop</Button>
           </div>
+
+          <div>
+            <p>Progress: {loadPercentage.toFixed(2)}%</p>
+          </div>
+          {uploadMessage && (
+            <p className="text-sm text-shadow-2xs">{uploadMessage}</p>
+          )}
         </div>
       )}
     </div>

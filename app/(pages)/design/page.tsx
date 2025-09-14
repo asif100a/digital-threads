@@ -60,11 +60,11 @@ export default function Design() {
   return (
     <div className="py-16 flex justify-center items-center gap-12">
       <div className="flex flex-col gap-3 relative">
-        <Button onClick={addRectangle}>
+        <Button onClick={addRectangle} className="w-fit mx-auto">
           <RiRectangleLine />
         </Button>
 
-        <Button onClick={addCircle}>
+        <Button onClick={addCircle} className="w-fit mx-auto">
           <FaRegCircle />
         </Button>
 
