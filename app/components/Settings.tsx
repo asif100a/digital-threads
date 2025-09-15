@@ -150,10 +150,10 @@ export default function Settings({ canvas }: SettingsProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* <div>Test: Settings Component Rendered</div> Debug rendering
-      {console.log("Selected object in render:", selectedObject)} Debug */}
+      
       {selectedObject && selectedObject.type === "rect" && (
         <>
+        <h4 className="text-lg font-medium mb-3">Rectangle Settings</h4>
           <div>
             <Label>Width</Label>
             <BorderTrailInput onChange={handleWidthChange} value={width} />
@@ -170,6 +170,7 @@ export default function Settings({ canvas }: SettingsProps) {
       )}
       {selectedObject && selectedObject.type === "circle" && (
         <>
+        <h4 className="text-lg font-medium mb-3">Circle Settings</h4>
           <div>
             <Label>Diameter</Label>
             <BorderTrailInput onChange={handleDiameterChange} value={diameter} />

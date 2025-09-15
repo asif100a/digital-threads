@@ -1,17 +1,22 @@
 "use client";
 
-import { Canvas, Circle, Rect } from "fabric";
-import type { Canvas as FabricCanvas } from "fabric";
+import { Canvas, Circle, Rect, type FabricObject } from "fabric";
+import type { FabricCanvas } from "@/types/fabric-helpers";
 import React, { useEffect, useRef, useState } from "react";
 import { RiRectangleLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 import { FaRegCircle } from "react-icons/fa";
 import Settings from "@/app/components/Settings";
 import Video from "@/app/components/Video";
+import CanvasSettings from "@/app/components/CanvasSettings";
+
+import type { Guideline } from "@/app/components/snappingHelper";
+import { clearGuideLines, handleObjectMoving } from "@/app/components/snappingHelper";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvas, setCanvas] = useState<typeof FabricCanvas | null>(null);
+  const [canvas, setCanvas] = useState<FabricCanvas | null>(null);
+  const [guidelines, setGuidelines] = useState<Guideline[]>([]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -24,6 +29,15 @@ export default function Design() {
       initCanvas.renderAll();
 
       setCanvas(initCanvas);
+
+      // Object Moving Logic
+      initCanvas.on("object:moving", (event: { target: FabricObject }) =>
+        handleObjectMoving(initCanvas, event.target, guidelines as any, setGuidelines)
+      );
+
+      initCanvas.on("object:modified", () =>
+        clearGuideLines(initCanvas, guidelines as any, setGuidelines)
+      );
 
       return () => {
         initCanvas.dispose();
@@ -75,8 +89,15 @@ export default function Design() {
         ref={canvasRef}
         className="border-2 border-dotted"
       ></canvas>
-      <div className="absolute top-2/5 right-[356px]">
-        <Settings canvas={canvas} />
+
+      <div className="space-y-6">
+        <div>
+          <Settings canvas={canvas} />
+        </div>
+        <div>
+          <h4 className="text-lg font-medium mb-3">Canvas Settings</h4>
+          <CanvasSettings canvas={canvas} />
+        </div>
       </div>
     </div>
   );
