@@ -11,12 +11,18 @@ import Video from "@/app/components/Video";
 import CanvasSettings from "@/app/components/CanvasSettings";
 
 import type { Guideline } from "@/app/components/snappingHelper";
-import { clearGuideLines, handleObjectMoving } from "@/app/components/snappingHelper";
+import {
+  clearGuideLines,
+  handleObjectMoving,
+} from "@/app/components/snappingHelper";
+import Cropping from "@/app/components/(crop)/Cropping";
+import CroppingSettings from "@/app/components/(crop)/CroppingSettings";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<FabricCanvas | null>(null);
   const [guidelines, setGuidelines] = useState<Guideline[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -32,7 +38,12 @@ export default function Design() {
 
       // Object Moving Logic
       initCanvas.on("object:moving", (event: { target: FabricObject }) =>
-        handleObjectMoving(initCanvas, event.target, guidelines as any, setGuidelines)
+        handleObjectMoving(
+          initCanvas,
+          event.target,
+          guidelines as any,
+          setGuidelines
+        )
       );
 
       initCanvas.on("object:modified", () =>
@@ -70,6 +81,10 @@ export default function Design() {
     }
   };
 
+  const handleFramesUpdated = () => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  };
+
   return (
     <div className="py-16 flex justify-center items-center gap-12">
       <div className="flex flex-col gap-3 relative">
@@ -81,6 +96,7 @@ export default function Design() {
           <FaRegCircle />
         </Button>
 
+        <Cropping canvas={canvas} onFramesUpdated={handleFramesUpdated} />
         <Video canvas={canvas} canvasRef={canvasRef} />
       </div>
 
@@ -97,6 +113,9 @@ export default function Design() {
         <div>
           <h4 className="text-lg font-medium mb-3">Canvas Settings</h4>
           <CanvasSettings canvas={canvas} />
+        </div>
+        <div className="">
+          <CroppingSettings canvas={canvas} refreshKey={refreshKey} />
         </div>
       </div>
     </div>
