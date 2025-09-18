@@ -17,6 +17,7 @@ import {
 } from "@/app/components/snappingHelper";
 import Cropping from "@/app/components/(crop)/Cropping";
 import CroppingSettings from "@/app/components/(crop)/CroppingSettings";
+import LayerList from "@/app/components/(layer)/LayerList";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -116,6 +117,9 @@ export default function Design() {
         </div>
         <div className="">
           <CroppingSettings canvas={canvas} refreshKey={refreshKey} />
+        </div>
+        <div className="">
+          <LayerList canvas={canvas} />
         </div>
       </div>
     </div>
