@@ -25,6 +25,22 @@ export default function Design() {
   const [guidelines, setGuidelines] = useState<Guideline[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const extendObjectWithCustomProps = (object) => {
+    object.styleID = object.styleID || null;
+    object.zIndex = object.zIndex || 0;
+    object.id = object.id || `obj-${Date.now()}`;
+
+    const originalToObject = object.toObject;
+    object.toObject = function (propertiesToInclude = []) {
+      return originalToObject.call(this, [
+        ...propertiesToInclude,
+        "styleID",
+        "zIndex",
+        "id",
+      ]);
+    };
+  };
+
   useEffect(() => {
     if (canvasRef.current) {
       const initCanvas = new Canvas(canvasRef.current, {
@@ -36,6 +52,11 @@ export default function Design() {
       initCanvas.renderAll();
 
       setCanvas(initCanvas);
+
+      // Fire the extendObjectWithCustomProps function when object is added
+      initCanvas.on("object:added", (e) => {
+        extendObjectWithCustomProps(e.target);
+      });
 
       // Object Moving Logic
       initCanvas.on("object:moving", (event: { target: FabricObject }) =>
