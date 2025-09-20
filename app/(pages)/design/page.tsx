@@ -17,6 +17,7 @@ import CroppingSettings from "@/app/components/(crop)/CroppingSettings";
 import LayerList from "@/app/components/(layer)/LayerList";
 import AddElements from "@/app/components/AddElements";
 import StyleEditor from "@/app/components/StyleEditor";
+import FileExport from "@/app/components/FileExport";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -67,6 +68,10 @@ export default function Design() {
 
         <Cropping canvas={canvas} onFramesUpdated={handleFramesUpdated} />
         <Video canvas={canvas} canvasRef={canvasRef} />
+      </div>
+
+      <div className="absolute top-0 bg-white px-3 py-1 rounded-md shadow">
+        <FileExport canvas={canvas} />
       </div>
 
       <canvas

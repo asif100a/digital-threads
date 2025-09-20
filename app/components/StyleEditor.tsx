@@ -40,12 +40,11 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
     canvas?.getObjects()?.forEach((object) => {
       const objectStyleID = object.get("styleID");
       const colorToUpdate = colors?.find((color) => color.id === objectStyleID);
-      if (colorToUpdate && object.get("fill" !== colorToUpdate.color)) {
+      if (colorToUpdate && object.get("fill") !== colorToUpdate.color) {
         object.set("fill", colorToUpdate.color);
       }
-
-      canvas.renderAll();
     });
+    canvas.renderAll();
   };
 
   const applyStyle = (color, id) => {
@@ -55,6 +54,17 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
       activeObject.set("styleID", id);
       canvas.renderAll();
     }
+  };
+
+  const updateColor = (id, newColor) => {
+    const updateColors = colors?.map((item) =>
+      item.id === id ? { ...item, color: newColor } : item
+    );
+    setColors(updateColors);
+  };
+
+  const openColorPickerById = (id: string) => {
+    document.getElementById(`color-${id}`)?.click();
   };
 
   return (
@@ -78,7 +88,7 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
 
       <hr className="my-3" />
 
-      <div className="grid grid-cols-3 gap-3 mb-3">
+      <div className="grid grid-cols-4 gap-3 mb-3">
         {colors.map(({ id, color }) => (
           <button
             key={id}
@@ -89,6 +99,35 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
             Apply
           </button>
         ))}
+      </div>
+
+      <div className="">
+        <h4 className="text-lg font-semibold mb-2">Edit Styles</h4>
+        <div className="grid grid-cols-4 gap-3">
+          {colors.map(({ id, color }) => (
+            <div className="">
+              <Input
+                id={`color-${id}`}
+                className="pointer-events-none opacity-0 w-0 h-0"
+                type="color"
+                value={color}
+                onChange={(e) => updateColor(id, e.target.value)}
+              />
+
+              <div
+                onClick={() => openColorPickerById(id)}
+                style={{ backgroundColor: color }}
+                className="w-10 h-8"
+              ></div>
+              <Input
+                type="text"
+                value={color}
+                onChange={(e) => updateColor(id, e.target.value)}
+              />
+              {/* <Button onClick={addColor}>Add Color</Button> */}
+            </div>
+          ))}
+        </div>
       </div>
 
       <Button onClick={saveColors}>Save Colors</Button>
