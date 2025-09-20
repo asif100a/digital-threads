@@ -5,7 +5,7 @@ import React, { useRef } from "react";
 import { toast } from "react-toastify";
 
 export default function FileExport({ canvas }: { canvas: typeof Canvas }) {
-  const uploadFileRef = useRef(null);
+  const uploadFileRef = useRef<HTMLInputElement>(null);
 
   const exportCanvas = () => {
     if (!canvas) return;
@@ -18,14 +18,16 @@ export default function FileExport({ canvas }: { canvas: typeof Canvas }) {
     link.click();
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files?.length < 1) return;
 
+    const file = files && files[0];
     if (file && file.type === "application/json") {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const json = JSON.parse(reader?.result);
+          const json = JSON.parse(reader?.result as string);
           canvas.clear();
           canvas.loadFromJSON(json);
         } catch (error) {

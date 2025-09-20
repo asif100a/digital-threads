@@ -11,7 +11,7 @@ type TColor = {
 export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
   const [colors, setColors] = useState<TColor[]>([]);
   const [newColor, setNewColor] = useState("#FF0000");
-  const colorInputRef = useRef(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const savedColors = localStorage.getItem("canvasStyles");
@@ -37,7 +37,7 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
   const saveColors = () => {
     localStorage.setItem("canvasStyles", JSON.stringify(colors));
 
-    canvas?.getObjects()?.forEach((object) => {
+    canvas?.getObjects()?.forEach((object: any) => {
       const objectStyleID = object.get("styleID");
       const colorToUpdate = colors?.find((color) => color.id === objectStyleID);
       if (colorToUpdate && object.get("fill") !== colorToUpdate.color) {
@@ -47,7 +47,7 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
     canvas.renderAll();
   };
 
-  const applyStyle = (color, id) => {
+  const applyStyle = (color: string, id: string) => {
     const activeObject = canvas.getActiveObject();
     if (activeObject) {
       activeObject.set("fill", color);
@@ -56,7 +56,7 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
     }
   };
 
-  const updateColor = (id, newColor) => {
+  const updateColor = (id: string, newColor: string) => {
     const updateColors = colors?.map((item) =>
       item.id === id ? { ...item, color: newColor } : item
     );
@@ -124,7 +124,6 @@ export default function StyleEditor({ canvas }: { canvas: typeof Canvas }) {
                 value={color}
                 onChange={(e) => updateColor(id, e.target.value)}
               />
-              {/* <Button onClick={addColor}>Add Color</Button> */}
             </div>
           ))}
         </div>

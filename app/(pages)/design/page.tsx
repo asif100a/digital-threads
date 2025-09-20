@@ -25,7 +25,7 @@ export default function Design() {
   const [guidelines, setGuidelines] = useState<Guideline[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const extendObjectWithCustomProps = (object) => {
+  const extendObjectWithCustomProps = (object: any) => {
     object.styleID = object.styleID || null;
     object.zIndex = object.zIndex || 0;
     object.id = object.id || `obj-${Date.now()}`;
@@ -54,7 +54,7 @@ export default function Design() {
       setCanvas(initCanvas);
 
       // Fire the extendObjectWithCustomProps function when object is added
-      initCanvas.on("object:added", (e) => {
+      initCanvas.on("object:added", (e: {target: FabricObject}) => {
         extendObjectWithCustomProps(e.target);
       });
 
