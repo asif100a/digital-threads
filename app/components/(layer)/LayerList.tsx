@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
 import * as fabric from "fabric";
-import { Canvas } from "fabric";
 import React, { useEffect, useState } from "react";
 import { FaArrowUp, FaEye, FaEyeSlash } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
+
+// Extend fabric.Object to include custom properties
+declare module "fabric" {
+  interface Object {
+    id?: string;
+    zIndex?: number;
+    prevOpacity?: number;
+  }
+}
 
 // Define types for clarity
 interface Layer {
@@ -13,8 +21,15 @@ interface Layer {
   opacity: number;
 }
 
+// Define custom interface for selection events
+interface FabricSelectionEvent {
+  selected?: fabric.Object[];
+  deselected?: fabric.Object[];
+  target?: fabric.Object;
+}
+
 interface LayerListProps {
-  canvas: typeof Canvas;
+  canvas: typeof fabric.Canvas | null; // Use fabric.Canvas instance type
 }
 
 export default function LayerList({ canvas }: LayerListProps) {
@@ -29,9 +44,9 @@ export default function LayerList({ canvas }: LayerListProps) {
   };
 
   // Update zIndex for all objects based on their position in the canvas stack
-  Canvas.prototype.updateZIndices = function () {
+  fabric.Canvas.prototype.updateZIndices = function () {
     const objects = this.getObjects();
-    objects.forEach((obj, idx) => {
+    objects.forEach((obj: any, idx: number) => {
       addIdToObject(obj);
       obj.zIndex = idx;
     });
@@ -39,47 +54,50 @@ export default function LayerList({ canvas }: LayerListProps) {
 
   // Update the layers state with current canvas objects
   const updateLayers = () => {
-    if (canvas) {
-      canvas.updateZIndices();
-      const objects = canvas
-        ?.getObjects()
-        .filter(
-          (obj) =>
-            !(
-              obj.id?.startsWith("vertical-") ||
-              obj.id?.startsWith("horizontal-")
-            )
-        )
-        .map((obj) => ({
-          id: obj.id,
-          zIndex: obj.zIndex,
-          type: obj.type,
-          opacity: obj.opacity || 1, // Ensure opacity is always defined
-        }));
+    if (!canvas) return;
 
-      setLayers([...objects].reverse()); // Reverse to show topmost layer first
-    }
+    canvas.updateZIndices();
+    const objects = canvas
+      .getObjects()
+      .filter(
+        (obj: any) =>
+          !(
+            obj.id?.startsWith("vertical-") || obj.id?.startsWith("horizontal-")
+          )
+      )
+      .map((obj: any) => ({
+        id: obj.id!, // Non-null assertion since addIdToObject ensures id exists
+        zIndex: obj.zIndex!, // Non-null assertion since updateZIndices sets zIndex
+        type: obj.type || "unknown",
+        opacity: obj.opacity ?? 1, // Use nullish coalescing for default opacity
+      }));
+
+    setLayers([...objects].reverse()); // Reverse to show topmost layer first
   };
 
   // Handle object selection on the canvas
-  const handleObjectSelected = (e: fabric.IEvent) => {
-    const selectedObject = e.selected ? e.selected[0] : null;
-    setSelectedLayer(selectedObject ? selectedObject.id : null);
+  const handleObjectSelected = (e: FabricSelectionEvent) => {
+    const selectedObject = e.selected?.[0] || null;
+    setSelectedLayer(selectedObject ? selectedObject.id! : null);
   };
 
   // Select a layer by clicking on it in the list
   const selectLayerInCanvas = (layerId: string) => {
-    const object = canvas.getObjects().find((obj) => obj.id === layerId);
+    if (!canvas) return;
+
+    const object = canvas.getObjects().find((obj: any) => obj.id === layerId);
     if (object) {
       canvas.setActiveObject(object);
       canvas.renderAll();
-      setSelectedLayer(object.id);
+      setSelectedLayer(object.id!);
     }
   };
 
   // Move a layer up or down in the stack
   const moveLayer = (layerId: string, direction: "up" | "down") => {
-    const object = canvas.getObjects().find((obj) => obj.id === layerId);
+    if (!canvas) return;
+
+    const object = canvas.getObjects().find((obj: any) => obj.id === layerId);
     if (object) {
       const currentIndex = canvas.getObjects().indexOf(object);
       const newIndex =
@@ -94,10 +112,10 @@ export default function LayerList({ canvas }: LayerListProps) {
 
   // Move selected layer up or down
   const moveSelectedLayer = (direction: "up" | "down") => {
-    if (!selectedLayer) return;
+    if (!selectedLayer || !canvas) return;
 
     const objects = canvas.getObjects();
-    const object = objects.find((obj) => obj.id === selectedLayer);
+    const object = objects.find((obj: any) => obj.id === selectedLayer);
     if (object) {
       const currentIndex = objects.indexOf(object);
       if (direction === "up" && currentIndex < objects.length - 1) {
@@ -113,20 +131,20 @@ export default function LayerList({ canvas }: LayerListProps) {
 
   // Toggle visibility of the selected layer
   const hideSelectedLayer = () => {
-    if (!selectedLayer) return;
+    if (!selectedLayer || !canvas) return;
 
-    const object = canvas.getObjects().find((obj) => obj.id === selectedLayer);
+    const object = canvas.getObjects().find((obj: any) => obj.id === selectedLayer);
     if (!object) return;
 
     if (object.opacity === 0) {
-      object.opacity = object.prevOpacity || 1;
+      object.opacity = object.prevOpacity ?? 1;
       object.prevOpacity = undefined;
     } else {
-      object.prevOpacity = object.opacity || 1;
+      object.prevOpacity = object.opacity ?? 1;
       object.opacity = 0;
     }
 
-    canvas.renderAll(); // Call renderAll on the canvas, not the object
+    canvas.renderAll();
     updateLayers();
   };
 
@@ -170,7 +188,7 @@ export default function LayerList({ canvas }: LayerListProps) {
           <FaArrowUp className="rotate-180" />
         </Button>
         <Button onClick={hideSelectedLayer} disabled={!selectedLayer}>
-          {canvas?.getObjects()?.find((obj) => obj.id === selectedLayer)
+          {canvas?.getObjects().find((obj: any) => obj.id === selectedLayer)
             ?.opacity === 0 ? (
             <FaEyeSlash />
           ) : (
@@ -181,7 +199,7 @@ export default function LayerList({ canvas }: LayerListProps) {
 
       <div className="space-y-3">
         <h4 className="text-lg font-medium mb-3">Layers</h4>
-        <ul className="list-disc">
+        <ul className="list-disc ml-6">
           {layers.map((layer) => (
             <li
               key={layer.id}

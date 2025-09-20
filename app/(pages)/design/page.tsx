@@ -1,11 +1,8 @@
 "use client";
 
-import { Canvas, Circle, Rect, type FabricObject } from "fabric";
+import { Canvas, type FabricObject } from "fabric";
 import type { FabricCanvas } from "@/types/fabric-helpers";
 import React, { useEffect, useRef, useState } from "react";
-import { RiRectangleLine } from "react-icons/ri";
-import { Button } from "@/components/ui/button";
-import { FaRegCircle } from "react-icons/fa";
 import Settings from "@/app/components/Settings";
 import Video from "@/app/components/Video";
 import CanvasSettings from "@/app/components/CanvasSettings";
@@ -19,6 +16,7 @@ import Cropping from "@/app/components/(crop)/Cropping";
 import CroppingSettings from "@/app/components/(crop)/CroppingSettings";
 import LayerList from "@/app/components/(layer)/LayerList";
 import AddElements from "@/app/components/AddElements";
+import StyleEditor from "@/app/components/StyleEditor";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -63,7 +61,7 @@ export default function Design() {
   };
 
   return (
-    <div className="py-16 flex justify-center items-center gap-12">
+    <div className="py-16 flex justify-center items-center gap-12 relative border">
       <div className="flex flex-col gap-3 relative">
         <AddElements canvas={canvas} />
 
@@ -77,7 +75,7 @@ export default function Design() {
         className="border-2 border-dotted"
       ></canvas>
 
-      <div className="space-y-6">
+      <div className="space-y-6 absolute left-[72%] top-0 my-6 p-3 border rounded-md shadow-lg bg-white max-h-[580px] overflow-y-auto">
         <div>
           <Settings canvas={canvas} />
         </div>
@@ -90,6 +88,9 @@ export default function Design() {
         </div>
         <div className="">
           <LayerList canvas={canvas} />
+        </div>
+        <div className="">
+          <StyleEditor canvas={canvas} />
         </div>
       </div>
     </div>
