@@ -18,6 +18,7 @@ import {
 import Cropping from "@/app/components/(crop)/Cropping";
 import CroppingSettings from "@/app/components/(crop)/CroppingSettings";
 import LayerList from "@/app/components/(layer)/LayerList";
+import AddElements from "@/app/components/AddElements";
 
 export default function Design() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -57,31 +58,6 @@ export default function Design() {
     }
   }, []);
 
-  const addRectangle = () => {
-    if (canvas) {
-      const rect = new Rect({
-        top: 100,
-        left: 50,
-        width: 100,
-        height: 60,
-        fill: "#F08080",
-      });
-      canvas.add(rect);
-    }
-  };
-
-  const addCircle = () => {
-    if (canvas) {
-      const circle = new Circle({
-        top: 150,
-        left: 150,
-        radius: 50,
-        fill: "#EE82EE",
-      });
-      canvas.add(circle);
-    }
-  };
-
   const handleFramesUpdated = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
@@ -89,13 +65,7 @@ export default function Design() {
   return (
     <div className="py-16 flex justify-center items-center gap-12">
       <div className="flex flex-col gap-3 relative">
-        <Button onClick={addRectangle} className="w-fit mx-auto">
-          <RiRectangleLine />
-        </Button>
-
-        <Button onClick={addCircle} className="w-fit mx-auto">
-          <FaRegCircle />
-        </Button>
+        <AddElements canvas={canvas} />
 
         <Cropping canvas={canvas} onFramesUpdated={handleFramesUpdated} />
         <Video canvas={canvas} canvasRef={canvasRef} />

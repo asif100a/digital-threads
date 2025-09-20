@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
+import * as fabric from "fabric";
 import { Canvas } from "fabric";
 import React, { useEffect, useState } from "react";
-import { FaArrowUp } from "react-icons/fa";
+import { FaArrowUp, FaEye, FaEyeSlash } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 
 // Define types for clarity
@@ -9,10 +10,7 @@ interface Layer {
   id: string;
   zIndex: number;
   type: string;
-}
-
-interface LayerOpacityMap {
-  [key: string]: number; // Maps layer ID to its original opacity
+  opacity: number;
 }
 
 interface LayerListProps {
@@ -22,51 +20,6 @@ interface LayerListProps {
 export default function LayerList({ canvas }: LayerListProps) {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
-  const [layerOpacityMap, setLayerOpacityMap] = useState<LayerOpacityMap>({});
-
-  // Toggle layer visibility (opacity)
-  const hideSelectedLayer = (layerId: string) => {
-    if (!layerId) return;
-
-    const object = canvas.getObjects().find((obj) => obj.id === layerId);
-    if (!object) return;
-
-    setLayerOpacityMap((prevMap) => {
-      const newMap = { ...prevMap };
-
-      // Store original opacity if not already stored
-      if (!(layerId in newMap)) {
-        newMap[layerId] = object.opacity ?? 1; // Default to 1 if opacity is undefined
-      }
-
-      // Toggle opacity: if 0, restore to original; if non-zero, set to 0
-      object.opacity = object.opacity === 0 ? newMap[layerId] : 0;
-
-      canvas.renderAll();
-      return newMap;
-    });
-  };
-
-  const moveSelectedLayer = (direction: "up" | "down") => {
-    if (!selectedLayer) return;
-
-    const objects = canvas.getObjects();
-    const object = objects.find((obj) => obj.id === selectedLayer);
-
-    if (object) {
-      const currentIndex = objects.indexOf(object); // Use indexOf on array
-
-      if (direction === "up" && currentIndex < objects.length - 1) {
-        canvas.moveTo(object, currentIndex + 1);
-      } else if (direction === "down" && currentIndex > 0) {
-        canvas.moveTo(object, currentIndex - 1);
-      }
-
-      canvas.renderAll();
-      updateLayers();
-      canvas.setActiveObject(object);
-    }
-  };
 
   // Add unique ID to canvas objects
   const addIdToObject = (object: fabric.Object) => {
@@ -89,7 +42,7 @@ export default function LayerList({ canvas }: LayerListProps) {
     if (canvas) {
       canvas.updateZIndices();
       const objects = canvas
-        .getObjects()
+        ?.getObjects()
         .filter(
           (obj) =>
             !(
@@ -101,6 +54,7 @@ export default function LayerList({ canvas }: LayerListProps) {
           id: obj.id,
           zIndex: obj.zIndex,
           type: obj.type,
+          opacity: obj.opacity || 1, // Ensure opacity is always defined
         }));
 
       setLayers([...objects].reverse()); // Reverse to show topmost layer first
@@ -119,6 +73,7 @@ export default function LayerList({ canvas }: LayerListProps) {
     if (object) {
       canvas.setActiveObject(object);
       canvas.renderAll();
+      setSelectedLayer(object.id);
     }
   };
 
@@ -135,6 +90,44 @@ export default function LayerList({ canvas }: LayerListProps) {
       canvas.renderAll();
       updateLayers();
     }
+  };
+
+  // Move selected layer up or down
+  const moveSelectedLayer = (direction: "up" | "down") => {
+    if (!selectedLayer) return;
+
+    const objects = canvas.getObjects();
+    const object = objects.find((obj) => obj.id === selectedLayer);
+    if (object) {
+      const currentIndex = objects.indexOf(object);
+      if (direction === "up" && currentIndex < objects.length - 1) {
+        canvas.moveTo(object, currentIndex + 1);
+      } else if (direction === "down" && currentIndex > 0) {
+        canvas.moveTo(object, currentIndex - 1);
+      }
+      canvas.renderAll();
+      updateLayers();
+      canvas.setActiveObject(object);
+    }
+  };
+
+  // Toggle visibility of the selected layer
+  const hideSelectedLayer = () => {
+    if (!selectedLayer) return;
+
+    const object = canvas.getObjects().find((obj) => obj.id === selectedLayer);
+    if (!object) return;
+
+    if (object.opacity === 0) {
+      object.opacity = object.prevOpacity || 1;
+      object.prevOpacity = undefined;
+    } else {
+      object.prevOpacity = object.opacity || 1;
+      object.opacity = 0;
+    }
+
+    canvas.renderAll(); // Call renderAll on the canvas, not the object
+    updateLayers();
   };
 
   useEffect(() => {
@@ -174,7 +167,15 @@ export default function LayerList({ canvas }: LayerListProps) {
             !selectedLayer || layers[layers.length - 1]?.id === selectedLayer
           }
         >
-          <FaArrowUp className="rotate-180" /> {/* Rotate for down arrow */}
+          <FaArrowUp className="rotate-180" />
+        </Button>
+        <Button onClick={hideSelectedLayer} disabled={!selectedLayer}>
+          {canvas?.getObjects()?.find((obj) => obj.id === selectedLayer)
+            ?.opacity === 0 ? (
+            <FaEyeSlash />
+          ) : (
+            <FaEye />
+          )}
         </Button>
       </div>
 
@@ -191,29 +192,7 @@ export default function LayerList({ canvas }: LayerListProps) {
                   : ""
               }`}
             >
-              {layer.type} (zIndex: {layer.zIndex})
-              <div className="inline ml-4">
-                <button
-                  onClick={() => moveLayer(layer.id, "up")}
-                  disabled={layer.zIndex >= canvas?.getObjects().length - 1}
-                  className="ml-2 px-2 py-1 bg-gray-200 rounded"
-                >
-                  Up
-                </button>
-                <button
-                  onClick={() => moveLayer(layer.id, "down")}
-                  disabled={layer.zIndex <= 0}
-                  className="ml-2 px-2 py-1 bg-gray-200 rounded"
-                >
-                  Down
-                </button>
-                <button
-                  onClick={() => hideSelectedLayer(layer.id)}
-                  className="ml-2 px-2 py-1 bg-gray-200 rounded"
-                >
-                  Hide Visibility
-                </button>
-              </div>
+              {layer.type} (zIndex: {layer.zIndex}, opacity: {layer.opacity})
             </li>
           ))}
         </ul>

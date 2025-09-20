@@ -1,10 +1,12 @@
-
 import { Input } from "@/components/ui/input";
 import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { BorderTrail } from "@/components/motion-primitives/border-trail";
-import type { Canvas as FabricCanvas, Rect as FabricRect, Circle as FabricCircle } from "fabric";
-
+import type {
+  Canvas as FabricCanvas,
+  Rect as FabricRect,
+  Circle as FabricCircle,
+} from "fabric";
 
 type SettingsProps = {
   canvas: typeof FabricCanvas | null;
@@ -22,21 +24,28 @@ type FabricObjectType = (typeof FabricRect | typeof FabricCircle) & {
 };
 
 export default function Settings({ canvas }: SettingsProps) {
-  const [selectedObject, setSelectedObject] = useState<FabricObjectType | null>(null);
+  const [selectedObject, setSelectedObject] = useState<FabricObjectType | null>(
+    null
+  );
   const [width, setWidth] = useState<string>("");
   const [height, setHeight] = useState<string>("");
   const [diameter, setDiameter] = useState<string>("");
   const [color, setColor] = useState<string>("");
+  const [opacity, setOpacity] = useState<string>("");
 
   useEffect(() => {
     // console.log("Canvas prop received:", canvas); // Debug canvas prop
     if (canvas) {
-  const handleSelectionCreated = (event: { selected?: FabricObjectType[] }) => {
+      const handleSelectionCreated = (event: {
+        selected?: FabricObjectType[];
+      }) => {
         // console.log("Selection created:", event.selected); // Debug
         handleObjectSelection(event.selected?.[0]);
       };
 
-  const handleSelectionUpdated = (event: { selected?: FabricObjectType[] }) => {
+      const handleSelectionUpdated = (event: {
+        selected?: FabricObjectType[];
+      }) => {
         // console.log("Selection updated:", event.selected); // Debug
         handleObjectSelection(event.selected?.[0]);
       };
@@ -47,12 +56,12 @@ export default function Settings({ canvas }: SettingsProps) {
         clearSettings();
       };
 
-  const handleObjectModified = (event: { target?: FabricObjectType }) => {
+      const handleObjectModified = (event: { target?: FabricObjectType }) => {
         // console.log("Object modified:", event.target); // Debug
         handleObjectSelection(event.target);
       };
 
-  const handleObjectScaling = (event: { target?: FabricObjectType }) => {
+      const handleObjectScaling = (event: { target?: FabricObjectType }) => {
         // console.log("Object scaling:", event.target); // Debug
         handleObjectSelection(event.target);
       };
@@ -73,9 +82,11 @@ export default function Settings({ canvas }: SettingsProps) {
     }
   }, [canvas]);
 
-  const handleObjectSelection = (object: FabricObjectType | null | undefined) => {
+  const handleObjectSelection = (
+    object: FabricObjectType | null | undefined
+  ) => {
     // console.log("Handling object selection:", object); // Debug
-  if (!object || !["rect", "circle"].includes(object.type)) {
+    if (!object || !["rect", "circle"].includes(object.type)) {
       setSelectedObject(null);
       clearSettings();
       return;
@@ -83,22 +94,32 @@ export default function Settings({ canvas }: SettingsProps) {
 
     setSelectedObject(object);
 
+    setOpacity(object.opacity);
+
     if (object.type === "rect") {
       setWidth(
-        object.width && object.scaleX ? String(Math.round(object.width * object.scaleX)) : ""
+        object.width && object.scaleX
+          ? String(Math.round(object.width * object.scaleX))
+          : ""
       );
       setHeight(
-        object.height && object.scaleY ? String(Math.round(object.height * object.scaleY)) : ""
+        object.height && object.scaleY
+          ? String(Math.round(object.height * object.scaleY))
+          : ""
       );
       setColor(object.fill || "");
       setDiameter("");
     } else if (object.type === "circle") {
       setDiameter(
-        object.radius && object.scaleX ? String(Math.round(object.radius * 2 * object.scaleX)) : ""
+        object.radius && object.scaleX
+          ? String(Math.round(object.radius * 2 * object.scaleX))
+          : ""
       );
       setColor(object.fill || "");
       setWidth("");
       setHeight("");
+    } else if (object.type === "textbox") {
+      setColor(object.fill);
     }
   };
 
@@ -107,13 +128,19 @@ export default function Settings({ canvas }: SettingsProps) {
     setHeight("");
     setColor("");
     setDiameter("");
+    setOpacity("");
   };
 
   const handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.replace(/,/g, "");
     const intValue = parseInt(value, 10);
     setWidth(value);
-    if (selectedObject && selectedObject.type === "rect" && !isNaN(intValue) && intValue >= 0) {
+    if (
+      selectedObject &&
+      selectedObject.type === "rect" &&
+      !isNaN(intValue) &&
+      intValue >= 0
+    ) {
       selectedObject.set({ width: intValue, scaleX: 1 });
       canvas?.renderAll();
     }
@@ -123,7 +150,12 @@ export default function Settings({ canvas }: SettingsProps) {
     const value = event.target.value.replace(/,/g, "");
     const intValue = parseInt(value, 10);
     setHeight(value);
-    if (selectedObject && selectedObject.type === "rect" && !isNaN(intValue) && intValue >= 0) {
+    if (
+      selectedObject &&
+      selectedObject.type === "rect" &&
+      !isNaN(intValue) &&
+      intValue >= 0
+    ) {
       selectedObject.set({ height: intValue, scaleY: 1 });
       canvas?.renderAll();
     }
@@ -133,7 +165,12 @@ export default function Settings({ canvas }: SettingsProps) {
     const value = event.target.value.replace(/,/g, "");
     const intValue = parseInt(value, 10);
     setDiameter(value);
-    if (selectedObject && selectedObject.type === "circle" && !isNaN(intValue) && intValue >= 0) {
+    if (
+      selectedObject &&
+      selectedObject.type === "circle" &&
+      !isNaN(intValue) &&
+      intValue >= 0
+    ) {
       selectedObject.set({ radius: intValue / 2, scaleX: 1, scaleY: 1 });
       canvas?.renderAll();
     }
@@ -148,12 +185,22 @@ export default function Settings({ canvas }: SettingsProps) {
     }
   };
 
+  const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    setOpacity(value);
+
+    if (selectedObject) {
+      selectedObject.set({ fill: value });
+      canvas.renderAll();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      
       {selectedObject && selectedObject.type === "rect" && (
         <>
-        <h4 className="text-lg font-medium mb-3">Rectangle Settings</h4>
+          <h4 className="text-lg font-medium mb-3">Rectangle Settings</h4>
           <div>
             <Label>Width</Label>
             <BorderTrailInput onChange={handleWidthChange} value={width} />
@@ -170,14 +217,26 @@ export default function Settings({ canvas }: SettingsProps) {
       )}
       {selectedObject && selectedObject.type === "circle" && (
         <>
-        <h4 className="text-lg font-medium mb-3">Circle Settings</h4>
+          <h4 className="text-lg font-medium mb-3">Circle Settings</h4>
           <div>
             <Label>Diameter</Label>
-            <BorderTrailInput onChange={handleDiameterChange} value={diameter} />
+            <BorderTrailInput
+              onChange={handleDiameterChange}
+              value={diameter}
+            />
           </div>
           <div>
             <Label>Color</Label>
             <Input type="color" onChange={handleColorChange} value={color} />
+          </div>
+          <div>
+            <Label>Opacity</Label>
+            <Input
+              type="number"
+              onChange={handleOpacityChange}
+              value={opacity}
+              placeholder="1"
+            />
           </div>
         </>
       )}
